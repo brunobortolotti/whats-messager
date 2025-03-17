@@ -15,16 +15,21 @@ ActiveRecord::Schema[7.0].define(version: 2025_03_16_183209) do
   enable_extension "pgcrypto"
   enable_extension "plpgsql"
 
-  create_table "messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "thread_id", null: false
-    t.uuid "sender_user_id", null: false
-    t.text "content", null: false
+  create_table "chat_users", id: false, force: :cascade do |t|
+    t.uuid "chat_id", null: false
+    t.uuid "user_id", null: false
+    t.integer "unread_count", default: 0, null: false
+  end
+
+  create_table "chats", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "label"
+    t.string "chat_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
 
-  create_table "thread_user_messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "thread_id", null: false
+  create_table "message_tracks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "chat_id", null: false
     t.uuid "message_id", null: false
     t.uuid "recipient_user_id", null: false
     t.datetime "sent_at"
@@ -32,15 +37,10 @@ ActiveRecord::Schema[7.0].define(version: 2025_03_16_183209) do
     t.datetime "read_at"
   end
 
-  create_table "thread_users", id: false, force: :cascade do |t|
-    t.uuid "thread_id", null: false
-    t.uuid "user_id", null: false
-    t.integer "unread_count", default: 0, null: false
-  end
-
-  create_table "threads", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "label"
-    t.string "thread_type"
+  create_table "messages", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "chat_id", null: false
+    t.uuid "sender_user_id", null: false
+    t.text "content", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
@@ -51,11 +51,11 @@ ActiveRecord::Schema[7.0].define(version: 2025_03_16_183209) do
     t.datetime "updated_at", null: false
   end
 
-  add_foreign_key "messages", "threads"
+  add_foreign_key "chat_users", "chats"
+  add_foreign_key "chat_users", "users"
+  add_foreign_key "message_tracks", "chats"
+  add_foreign_key "message_tracks", "messages"
+  add_foreign_key "message_tracks", "users", column: "recipient_user_id"
+  add_foreign_key "messages", "chats"
   add_foreign_key "messages", "users", column: "sender_user_id"
-  add_foreign_key "thread_user_messages", "messages"
-  add_foreign_key "thread_user_messages", "threads"
-  add_foreign_key "thread_user_messages", "users", column: "recipient_user_id"
-  add_foreign_key "thread_users", "threads"
-  add_foreign_key "thread_users", "users"
 end
