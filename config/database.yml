@@ -9,14 +9,14 @@ default: &default
 
 development:
   <<: *default
-  database: app_development
+  database: messaging_service_development
 
 test:
   <<: *default
-  database: app_test
+  database: messaging_service_test
 
 production:
   <<: *default
-  database: app_production
+  database: messaging_service_production
   username: app
   password: <%= ENV["APP_DATABASE_PASSWORD"] %>
